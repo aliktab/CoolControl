@@ -20,10 +20,7 @@
 
 
 #include <PwCore.h>
-
-#include <EEPROM.h>
 #include <I2C.h>
-
 #include <MCP9808.h>
 
 
