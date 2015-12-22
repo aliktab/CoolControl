@@ -32,7 +32,10 @@ const uint8_t PIN_FAN[] = { 11, 12 };
 // Time constants
 
 const int64_t CYCLE_PAUSE  = (int64_t)1000;   // Duration of signal calculation cycle.
-const int64_t CHECK_LENGTH = (int64_t)5;      // Number of cycles per check.
+const int64_t CHECK_LENGTH = (int64_t)10;      // Number of cycles per check.
+
+const int64_t MAX_ON_TIME  = (int64_t)30 * 60 * 1000;      // Max time FAN is on.
+const int64_t MAX_OFF_TIME = (int64_t)6 * 60 * 60 * 1000;  // Max time FAN is off.
 
 
 // Fan control constants
@@ -41,8 +44,9 @@ const uint8_t FAN_STATE_OFF  = 0;
 const uint8_t FAN_STATE_LOW  = 1;
 const uint8_t FAN_STATE_HIGH = 2;
 
-const float FAN_TEMPER_OFF   = 35.0; // Temperature when fans should be switched off.
-const float FAN_TEMPER_ON    = 50.0; // Temperature when fans should be switched on.
+const float TEMPER_OFF   = 38.0;   // Temperature when fans should be switched off.
+const float TEMPER_ON    = 42.8;   // Temperature when fans should be switched on.
+const float TEMPER_NORM  = 40.0;   // Normal temperature when we don't need to switch fan at all.
 
 
 // Global variables
@@ -93,7 +97,7 @@ void setup()
 void loop()
 {
   // Update time system.
-  if (millis() < start_time) // Skip bed cycle.
+  if (millis() < start_time) // Skip bad cycle.
   {
     start_time = millis();
     return;
@@ -110,7 +114,9 @@ void loop()
   }
 
   // Check temperature and manage fans
-  if (temperature > FAN_TEMPER_ON)
+  // if (!fan_switched_on && (temperature > TEMPER_ON || 
+  //                          temperature > TEMPER_NORM && mode_time > MAX_OFF_TIME))
+  if (!fan_switched_on && (temperature > TEMPER_ON))
   {
     // Switch fan on.
     for (int idx = 0; idx < sizeof(PIN_FAN) / sizeof(uint8_t); idx++)
@@ -123,7 +129,8 @@ void loop()
     fan_switched_on = true;
   }
 
-  if (temperature < FAN_TEMPER_OFF)
+  if (fan_switched_on && (temperature < TEMPER_OFF || 
+                          temperature < TEMPER_NORM && mode_time > MAX_ON_TIME))
   {
     // Switch fan off.
     for (int idx = 0; idx < sizeof(PIN_FAN) / sizeof(uint8_t); idx++)
