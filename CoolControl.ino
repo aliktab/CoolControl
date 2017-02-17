@@ -26,7 +26,7 @@
 
 // Define hardware pins.
 
-const uint8_t PIN_FAN[] = { 11, 12 }; 
+const uint8_t PIN_FAN[] = { 11, 12 };
 
 
 // Time constants
@@ -35,6 +35,8 @@ const int64_t CYCLE_PAUSE  = (int64_t)1000;   // Duration of signal calculation 
 const int64_t CHECK_LENGTH = (int64_t)10;      // Number of cycles per check.
 
 const int64_t MAX_ON_TIME  = (int64_t)30 * 60 * 1000;      // Max time FAN is on.
+const int64_t MIN_ON_TIME  = (int64_t)2  * 60 * 1000;      // Max time FAN is on.
+
 const int64_t MAX_OFF_TIME = (int64_t)6 * 60 * 60 * 1000;  // Max time FAN is off.
 
 
@@ -64,7 +66,7 @@ bool fan_switched_on = false;
 void setup()
 {
   // Initialize serial connection.
-  Serial.begin(57600); 
+  Serial.begin(57600);
   Serial.println("CoolControl.");
 
   // Initializeline pins mode, value, state and timer.
@@ -114,7 +116,7 @@ void loop()
   }
 
   // Check temperature and manage fans
-  // if (!fan_switched_on && (temperature > TEMPER_ON || 
+  // if (!fan_switched_on && (temperature > TEMPER_ON ||
   //                          temperature > TEMPER_NORM && mode_time > MAX_OFF_TIME))
   if (!fan_switched_on && (temperature > TEMPER_ON))
   {
@@ -129,7 +131,7 @@ void loop()
     fan_switched_on = true;
   }
 
-  if (fan_switched_on && (temperature < TEMPER_OFF || 
+  if (fan_switched_on && (temperature < TEMPER_OFF  && mode_time > MIN_ON_TIME ||
                           temperature < TEMPER_NORM && mode_time > MAX_ON_TIME))
   {
     // Switch fan off.
@@ -145,7 +147,7 @@ void loop()
 
   // Serrialize current data.
   char log_str[128];
-  sprintf(log_str, "  %s time is %li:%02li:%02li, Temperature: ", 
+  sprintf(log_str, "  %s time is %li:%02li:%02li, Temperature: ",
       fan_switched_on ? "ON " : "OFF",
       (long)((mode_time / 3600000)     ),
       (long)((mode_time / 60000  ) % 60),
